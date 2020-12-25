@@ -26,16 +26,16 @@ int BitmapMatUtil::bitmap2Mat(JNIEnv *env, jobject bitmap, Mat &mat) {
 	AndroidBitmap_getInfo(env, bitmap, &bitmapInfo);
 
 	//返回三通道 CV_8UC4->argb CV_8UC2->rgb CV_8UC1->黑白
-	Mat createMat(bitmapInfo.height, bitmapInfo.width, CV_8UC2);
+	Mat createMat(bitmapInfo.height, bitmapInfo.width, CV_8UC4);
 	//mat 里面四颜色通道 CV_8UC4
 	if (bitmapInfo.format == ANDROID_BITMAP_FORMAT_RGBA_8888) {
 		Mat temp(bitmapInfo.height, bitmapInfo.width, CV_8UC4, pixes);
-		//4颜色通道转换成2颜色通道
-		cvtColor(temp, createMat, COLOR_BGRA2BGR565);
+		temp.copyTo(createMat);
 		//mat 里面三颜色 CV_8UC2
 	} else if (bitmapInfo.format == ANDROID_BITMAP_FORMAT_RGB_565) {
 		Mat temp(bitmapInfo.height, bitmapInfo.width, CV_8UC2, pixes);
-		temp.copyTo(createMat);
+		//4颜色通道转换成2颜色通道
+		cvtColor(temp, createMat, COLOR_BGR5652BGRA);
 	}
 
 	createMat.copyTo(mat);
