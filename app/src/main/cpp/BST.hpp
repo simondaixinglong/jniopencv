@@ -106,6 +106,11 @@ private:
 	}
 
 	TreeNode<K, V> *removeNode(TreeNode<K, V> *pNode, K key) {
+
+		if (pNode == NULL) {
+			return NULL;
+		}
+
 		if (pNode->key > key) {
 			pNode->left = removeNode(pNode->left, key);
 		} else if (pNode->key < key) {
