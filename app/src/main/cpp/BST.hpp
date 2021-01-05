@@ -17,8 +17,8 @@ public:
 	TreeNode(TreeNode<K, V> *pNode) {
 		this->left = pNode->left;
 		this->right = pNode->right;
-		this->key = key;
-		this->value = value;
+		this->key = pNode->key;
+		this->value = pNode->value;
 	}
 
 	TreeNode(K key, V value) {
@@ -153,7 +153,7 @@ private:
 		if (pNode->right == NULL) {
 			return pNode;
 		}
-		return maximum(pNode->left);
+		return maximum(pNode->right);
 	}
 
 	void inOrderTraverse(TreeNode<K, V> *pNode, void (*fun)(int, int)) {
