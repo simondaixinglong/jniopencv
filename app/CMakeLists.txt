@@ -39,6 +39,9 @@ add_library( # Sets the name of the library.
 
         # Provides a relative path to your source file(s).
         src/main/cpp/Hello.cpp
+        src/main/cpp/huffman.cpp
+        src/main/cpp/pQueue.cpp
+        src/main/cpp/main.cpp
         )
 
 # Searches for a specified prebuilt library and stores the path as a
