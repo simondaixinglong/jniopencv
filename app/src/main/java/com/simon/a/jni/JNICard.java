@@ -16,4 +16,6 @@ public class JNICard {
 
     public static native String cardOrc(Bitmap bitmap);
 
+    public static native int gray(Bitmap bitmap);
+
 }

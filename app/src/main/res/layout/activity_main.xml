@@ -6,21 +6,17 @@
 
 
     <ImageView
+        android:id="@+id/img_1"
         android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:src="@drawable/card" />
+        android:layout_height="0dp"
+        android:src="@drawable/car"
+        android:layout_weight="1" />
 
-
-    <Button
+    <ImageView
+        android:id="@+id/img_2"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="getCardNum"
-        android:text="getCardNumber" />
-
-    <TextView
-        android:id="@+id/tv_num"
-        android:layout_width="match_parent"
-        android:layout_height="30dp" />
+        android:layout_height="0dp"
+        android:layout_weight="1" />
 
 
 </LinearLayout>

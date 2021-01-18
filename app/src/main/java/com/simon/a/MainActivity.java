@@ -6,14 +6,15 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.simon.a.jni.JNICard;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextView tvNum;
     private Bitmap cardBitmap;
+    private ImageView img2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,12 +24,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initParams() {
-        tvNum = findViewById(R.id.tv_num);
-        cardBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.card);
-    }
+        cardBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.car);
 
+        JNICard.gray(cardBitmap);
 
-    public void getCardNum(View view) {
-        tvNum.setText(JNICard.cardOrc(cardBitmap));
+//        Bitmap gray = BitmapUtils.gray2(cardBitmap);
+
+        img2 = findViewById(R.id.img_2);
+        img2.setImageBitmap(cardBitmap);
     }
 }
