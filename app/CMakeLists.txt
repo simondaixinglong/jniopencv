@@ -12,6 +12,9 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     message(STATUS "optional:-std=c++11")
 endif(CMAKE_COMPILER_IS_GNUCXX)
 
+#把当前目录作为源文件目录赋值给 SRC_LIST
+AUX_SOURCE_DIRECTORY(src/main/cpp SRC_LIST)
+
 #需要引入我们头文件,以这个配置的目录为基准
 include_directories(src/main/jniLibs/include)
 
@@ -38,8 +41,7 @@ add_library( # Sets the name of the library.
         SHARED
 
         # Provides a relative path to your source file(s).
-        src/main/cpp/Hello.cpp
-        )
+        ${SRC_LIST})
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by
