@@ -14,32 +14,116 @@ endif(CMAKE_COMPILER_IS_GNUCXX)
 
 #需要引入我们头文件,以这个配置的目录为基准
 include_directories(src/main/jniLibs/include)
-
-# 添加依赖 opencv.so 库
-set(distribution_DIR ${CMAKE_SOURCE_DIR}/../../../../src/main/jniLibs)
-add_library(
-        opencv_java4
-        SHARED
-        IMPORTED)
-set_target_properties(
-        opencv_java4
-        PROPERTIES IMPORTED_LOCATION
-        ../../../../src/main/jniLibs/arm64-v8a/libopencv_java4.so)
+include_directories(src/main/jniLibs/other)
 
 # Creates and names a library, sets it as either STATIC
 # or SHARED, and provides the relative paths to its source code.
 # You can define multiple libraries, and CMake builds them for you.
 # Gradle automatically packages shared libraries with your APK.
 
+#FFMpeg配置
+#FFmpeg配置目录
+set(distribution_DIR ${CMAKE_SOURCE_DIR}/../../../../src/main/jniLibs)
+
+# 编解码(最重要的库)
+add_library(
+            avcodec
+            SHARED
+            IMPORTED)
+set_target_properties(
+            avcodec
+            PROPERTIES IMPORTED_LOCATION
+            ../../../../src/main/jniLibs/arm64-v8a/libavcodec-56.so)
+
+# 设备信息
+add_library(
+            avdevice
+            SHARED
+            IMPORTED)
+set_target_properties(
+            avdevice
+            PROPERTIES IMPORTED_LOCATION
+            ../../../../src/main/jniLibs/arm64-v8a/libavdevice-56.so)
+
+
+# 滤镜特效处理库
+add_library(
+            avfilter
+            SHARED
+            IMPORTED)
+set_target_properties(
+            avfilter
+            PROPERTIES IMPORTED_LOCATION
+            ../../../../src/main/jniLibs/arm64-v8a/libavfilter-5.so)
+
+# 封装格式处理库
+add_library(
+            avformat
+            SHARED
+            IMPORTED)
+set_target_properties(
+            avformat
+            PROPERTIES IMPORTED_LOCATION
+            ../../../../src/main/jniLibs/arm64-v8a/libavformat-56.so)
+
+# 工具库(大部分库都需要这个库的支持)
+add_library(
+            avutil
+            SHARED
+            IMPORTED)
+set_target_properties(
+            avutil
+            PROPERTIES IMPORTED_LOCATION
+            ../../../../src/main/jniLibs/arm64-v8a/libavutil-54.so)
+
+
+# 后期处理
+add_library(
+            postproc
+            SHARED
+            IMPORTED)
+set_target_properties(
+            postproc
+            PROPERTIES IMPORTED_LOCATION
+            ../../../../src/main/jniLibs/arm64-v8a/libpostproc-53.so)
+
+
+# 音频采样数据格式转换库
+add_library(
+            swresample
+            SHARED
+            IMPORTED)
+set_target_properties(
+            swresample
+            PROPERTIES IMPORTED_LOCATION
+            ../../../../src/main/jniLibs/arm64-v8a/libswresample-1.so)
+
+# 视频像素数据格式转换
+add_library(
+            swscale
+            SHARED
+            IMPORTED)
+set_target_properties(
+            swscale
+            PROPERTIES IMPORTED_LOCATION
+            ../../../../src/main/jniLibs/arm64-v8a/libswscale-3.so)
+
 add_library( # Sets the name of the library.
-        Hello
+             Hello
 
-        # Sets the library as a shared library.
-        SHARED
+             # Sets the library as a shared library.
+             SHARED
 
-        # Provides a relative path to your source file(s).
-        src/main/cpp/Hello.cpp
+             # Provides a relative path to your source file(s).
+             src/main/cpp/Hello.cpp
+             # 编译额外的 C 文件
+             src/main/cpp/ffmpeg_filter.c
+             src/main/cpp/ffmpeg_mod.c
+             src/main/cpp/ffmpeg_opt.c
+             src/main/cpp/cmdutils.c
         )
+
+
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by
@@ -59,10 +143,10 @@ find_library( # Sets the name of the path variable.
 # build script, prebuilt third-party libraries, or system libraries.
 
 target_link_libraries( # Specifies the target library.
-        Hello opencv_java4
+                       # 链接额外的 ffmpeg 的编译
+                        Hello
+        avcodec avdevice avfilter avformat avutil postproc swresample swscale
 
-        #加入该依赖库
-        jnigraphics
-        # Links the target library to the log library
-        # included in the NDK.
-        ${log-lib} )
+                       # Links the target library to the log library
+                       # included in the NDK.
+                       ${log-lib} )
