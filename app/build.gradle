@@ -17,14 +17,26 @@ android {
             cmake {
                 cppFlags "-fexceptions"
                 // 只生成 armeabi
-                abiFilters "arm64-v8a"
+                abiFilters "armeabi-v7a"
                 arguments "-DANDROID_STL=c++_shared"
             }
+        }
+
+        ndk {
+            abiFilters "armeabi-v7a"
         }
     }
 
     packagingOptions {
-        pickFirst 'lib/arm64-v8a/libopencv_java4.so'
+        pickFirst 'lib/armeabi-v7a/libavcodec-57.so'
+        pickFirst 'lib/armeabi-v7a/libavdevice-57.so'
+        pickFirst 'lib/armeabi-v7a/libavfilter-6.so'
+        pickFirst 'lib/armeabi-v7a/libavformat-57.so'
+        pickFirst 'lib/armeabi-v7a/libavutil-55.so'
+        pickFirst 'lib/armeabi-v7a/libpostproc-54.so'
+        pickFirst 'lib/armeabi-v7a/libpostproc-54.so'
+        pickFirst 'lib/armeabi-v7a/libswresample-2.so'
+        pickFirst 'lib/armeabi-v7a/libswscale-4.so'
     }
 
     buildTypes {

@@ -12,19 +12,15 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     message(STATUS "optional:-std=c++11")
 endif(CMAKE_COMPILER_IS_GNUCXX)
 
-#需要引入我们头文件,以这个配置的目录为基准
+##需要引入我们头文件,以这个配置的目录为基准
 include_directories(src/main/jniLibs/include)
 
-# 添加依赖 opencv.so 库
-set(distribution_DIR ${CMAKE_SOURCE_DIR}/../../../../src/main/jniLibs)
-add_library(
-        opencv_java4
-        SHARED
-        IMPORTED)
-set_target_properties(
-        opencv_java4
-        PROPERTIES IMPORTED_LOCATION
-        ../../../../src/main/jniLibs/arm64-v8a/libopencv_java4.so)
+# 添加共享库搜索路径
+LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/main/jniLibs/armeabi-v7a)
+
+# 指定源文件目录
+AUX_SOURCE_DIRECTORY(${CMAKE_SOURCE_DIR}/src/main/cpp SRC_LIST)
+# FILE(GLOB SRC_LIST "src/main/cpp/*.cpp")
 
 # Creates and names a library, sets it as either STATIC
 # or SHARED, and provides the relative paths to its source code.
@@ -38,7 +34,9 @@ add_library( # Sets the name of the library.
         SHARED
 
         # Provides a relative path to your source file(s).
-        src/main/cpp/Hello.cpp
+        src/main/cpp/DZFFmpeg.cpp
+        src/main/cpp/DZAudio.cpp
+        ${SRC_LIST}
         )
 
 # Searches for a specified prebuilt library and stores the path as a
@@ -59,7 +57,27 @@ find_library( # Sets the name of the path variable.
 # build script, prebuilt third-party libraries, or system libraries.
 
 target_link_libraries( # Specifies the target library.
-        Hello opencv_java4
+        Hello
+        # 编解码(最重要的库)
+        avcodec-57
+        # 设备信息
+        avdevice-57
+        # 滤镜特效处理库
+        avfilter-6
+        # 封装格式处理库
+        avformat-57
+        # 工具库(大部分库都需要这个库的支持)
+        avutil-55
+        # 后期处理
+        postproc-54
+        # 音频采样数据格式转换库
+        swresample-2
+        # 视频像素数据格式转换
+        swscale-4
+        # 链接 android ndk 自带的一些库
+        android
+        # Links the target library to the log library
+        # included in the NDK.
 
         #加入该依赖库
         jnigraphics
