@@ -39,6 +39,7 @@ add_library( # Sets the name of the library.
 
         # Provides a relative path to your source file(s).
         src/main/cpp/Hello.cpp
+        src/main/cpp/native-lib.cpp
         )
 
 # Searches for a specified prebuilt library and stores the path as a
@@ -63,6 +64,7 @@ target_link_libraries( # Specifies the target library.
 
         #加入该依赖库
         jnigraphics
+        OpenSLES
         # Links the target library to the log library
         # included in the NDK.
         ${log-lib} )
