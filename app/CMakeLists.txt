@@ -34,8 +34,11 @@ add_library( # Sets the name of the library.
         SHARED
 
         # Provides a relative path to your source file(s).
-        src/main/cpp/DZFFmpeg.cpp
-        src/main/cpp/DZAudio.cpp
+#        src/main/cpp/music-player.cpp
+#        src/main/cpp/DZFFmpeg.cpp
+#        src/main/cpp/DZAudio.cpp
+#        src/main/cpp/DZPacketQueue.cpp
+#        src/main/cpp/DZPlayerStatus.cpp
         ${SRC_LIST}
         )
 
@@ -81,6 +84,7 @@ target_link_libraries( # Specifies the target library.
 
         #加入该依赖库
         jnigraphics
+        OpenSLES
         # Links the target library to the log library
         # included in the NDK.
         ${log-lib} )
