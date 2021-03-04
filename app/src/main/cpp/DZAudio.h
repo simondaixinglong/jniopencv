@@ -10,6 +10,7 @@
 #include "DZConstDefine.h"
 #include "DZPacketQueue.h"
 #include "DZPlayerStatus.h"
+#include "DZMedia.h"
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
 
@@ -19,18 +20,13 @@ extern "C" {
 };
 
 
-class DZAudio {
+class DZAudio : public DZMedia {
 public:
     AVFormatContext *pFormatContext = NULL;
-    AVCodecContext *pCodecContext = NULL;
     SwrContext *pSwrContext = NULL;
     uint8_t *resampleOutBuffer = NULL;
-    DZJNICall *pJniCall = NULL;
-    int audioStreamIndex = -1;
-    DZPacketQueue *pPacketQueue = NULL;
-    DZPlayerStatus *pPlayerStatus = NULL;
 public:
-    DZAudio(int audioStreamIndex, DZJNICall *pJniCall, AVFormatContext *pFromatContext);
+    DZAudio(int audioStreamIndex, DZJNICall *pJniCall, DZPlayerStatus *pPlayerStatus);
 
     ~DZAudio();
 
@@ -40,9 +36,7 @@ public:
 
     int resampleAudio();
 
-    void analysisStream(ThreadMode threadMode, AVStream **streams);
-
-    void callPlayerJniError(ThreadMode threadMode, int code, char *msg);
+    void privateAnalysisStream(ThreadMode threadMode, AVFormatContext *pFormatContext);
 
     void release();
 };

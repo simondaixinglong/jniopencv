@@ -1,4 +1,4 @@
-package com.simon.a.jni.listener;
+package com.simon.a.jni.media.listener;
 
 /**
  * Created by hcDarren on 2019/6/16.

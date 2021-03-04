@@ -7,6 +7,8 @@
 #include "DZJNICall.h"
 #include "DZAudio.h"
 #include <pthread.h>
+#include "DZConstDefine.h"
+#include "DZVideo.h"
 
 extern "C"{
 #include "libavformat/avformat.h"
@@ -18,7 +20,9 @@ public:
     AVFormatContext *pFormatContext = NULL;
     char* url = NULL;
     DZJNICall *pJniCall = NULL;
+    DZPlayerStatus *pPlayerStatus;
     DZAudio *pAudio = NULL;
+    DZVideo *pVideo;
 
 public:
     DZFFmpeg(DZJNICall *pJniCall, const char* url);
@@ -36,6 +40,10 @@ public:
     void callPlayerJniError(ThreadMode threadMode, int code, char* msg);
 
     void release();
+
+    void setSurface(jobject surface);
+
+
 };
 
 

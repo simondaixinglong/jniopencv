@@ -3,50 +3,21 @@
 //
 #include "DZAudio.h"
 
-DZAudio::DZAudio(int audioStreamIndex, DZJNICall *pJniCall, AVFormatContext *pFormatContext) {
-    this->audioStreamIndex = audioStreamIndex;
-    this->pJniCall = pJniCall;
-    this->pFormatContext = pFormatContext;
-    pPacketQueue = new DZPacketQueue();
-    pPlayerStatus = new DZPlayerStatus();
+DZAudio::DZAudio(int audioStreamIndex, DZJNICall *pJniCall, DZPlayerStatus *pPlayerStatus)
+        : DZMedia(audioStreamIndex, pJniCall, pPlayerStatus) {
+
 }
 
-void *threadPlay(void *context) {
+void *threadAudioPlay(void *context) {
     DZAudio *pAudio = (DZAudio *) context;
     pAudio->initCrateOpenSLES();
     return 0;
 }
 
-void *threadReadPacket(void *context) {
-    DZAudio *pAudio = (DZAudio *) context;
-    while (pAudio->pPlayerStatus != NULL && !pAudio->pPlayerStatus->isExit) {
-        AVPacket *pPacket = av_packet_alloc();
-        if (av_read_frame(pAudio->pFormatContext, pPacket) >= 0) {
-            if (pPacket->stream_index == pAudio->audioStreamIndex) {
-                pAudio->pPacketQueue->push(pPacket);
-            } else {
-                // 1. 解引用数据 data ， 2. 销毁 pPacket 结构体内存  3. pPacket = NULL
-                av_packet_free(&pPacket);
-            }
-        } else {
-            // 1. 解引用数据 data ， 2. 销毁 pPacket 结构体内存  3. pPacket = NULL
-            av_packet_free(&pPacket);
-            // 睡眠一下，尽量不去消耗 cpu 的资源，也可以退出销毁这个线程
-            // break;
-        }
-    }
-    return 0;
-}
-
 void DZAudio::play() {
-    // 一个线程去读取 Packet
-    pthread_t readPacketThreadT;
-    pthread_create(&readPacketThreadT, NULL, threadReadPacket, this);
-    pthread_detach(readPacketThreadT);
-
     // 一个线程去解码播放
     pthread_t playThreadT;
-    pthread_create(&playThreadT, NULL, threadPlay, this);
+    pthread_create(&playThreadT, NULL, threadAudioPlay, this);
     pthread_detach(playThreadT);
 }
 
@@ -67,6 +38,12 @@ int DZAudio::resampleAudio() {
                 dataSize = swr_convert(pSwrContext, &resampleOutBuffer, pFrame->nb_samples,
                         (const uint8_t **) pFrame->data, pFrame->nb_samples);
                 dataSize = dataSize * 2 * 2;
+
+                // 设置当前的时间，方便回调进度给 Java ，方便视频同步音频
+                double times = av_frame_get_best_effort_timestamp(pFrame) * av_q2d(timeBase);// s
+                if (times > currentTime) {
+                    currentTime = times;
+                }
                 // write 写到缓冲区 pFrame.data -> javabyte
                 // size 是多大，装 pcm 的数据
                 // 1s 44100 点  2通道 ，2字节    44100*2*2
@@ -152,46 +129,7 @@ DZAudio::~DZAudio() {
     release();
 }
 
-void DZAudio::callPlayerJniError(ThreadMode threadMode, int code, char *msg) {
-    // 释放资源
-    release();
-    // 回调给 java 层调用
-    pJniCall->callPlayerError(threadMode, code, msg);
-}
-
-void DZAudio::analysisStream(ThreadMode threadMode, AVStream **streams) {
-    // 查找解码
-    AVCodecParameters *pCodecParameters = pFormatContext->streams[audioStreamIndex]->codecpar;
-    AVCodec *pCodec = avcodec_find_decoder(pCodecParameters->codec_id);
-    if (pCodec == NULL) {
-        LOGE("codec find audio decoder error");
-        callPlayerJniError(threadMode, CODEC_FIND_DECODER_ERROR_CODE,
-                "codec find audio decoder error");
-        return;
-    }
-    // 打开解码器
-    pCodecContext = avcodec_alloc_context3(pCodec);
-    if (pCodecContext == NULL) {
-        LOGE("codec alloc context error");
-        callPlayerJniError(threadMode, CODEC_ALLOC_CONTEXT_ERROR_CODE, "codec alloc context error");
-        return;
-    }
-    int codecParametersToContextRes = avcodec_parameters_to_context(pCodecContext,
-            pCodecParameters);
-    if (codecParametersToContextRes < 0) {
-        LOGE("codec parameters to context error: %s", av_err2str(codecParametersToContextRes));
-        callPlayerJniError(threadMode, codecParametersToContextRes,
-                av_err2str(codecParametersToContextRes));
-        return;
-    }
-
-    int codecOpenRes = avcodec_open2(pCodecContext, pCodec, NULL);
-    if (codecOpenRes != 0) {
-        LOGE("codec audio open error: %s", av_err2str(codecOpenRes));
-        callPlayerJniError(threadMode, codecOpenRes, av_err2str(codecOpenRes));
-        return;
-    }
-
+void DZAudio::privateAnalysisStream(ThreadMode threadMode, AVFormatContext *pFormatContext) {
     // ---------- 重采样 start ----------
     int64_t out_ch_layout = AV_CH_LAYOUT_STEREO;
     enum AVSampleFormat out_sample_fmt = AVSampleFormat::AV_SAMPLE_FMT_S16;
@@ -217,25 +155,11 @@ void DZAudio::analysisStream(ThreadMode threadMode, AVStream **streams) {
 }
 
 void DZAudio::release() {
-    if (pPacketQueue) {
-        delete (pPacketQueue);
-        pPacketQueue = NULL;
-    }
+    DZMedia::release();
 
     if (resampleOutBuffer) {
         free(resampleOutBuffer);
         resampleOutBuffer = NULL;
-    }
-
-    if (pPlayerStatus) {
-        delete (pPlayerStatus);
-        pPlayerStatus = NULL;
-    }
-
-    if (pCodecContext != NULL) {
-        avcodec_close(pCodecContext);
-        avcodec_free_context(&pCodecContext);
-        pCodecContext = NULL;
     }
 
     if (pSwrContext != NULL) {

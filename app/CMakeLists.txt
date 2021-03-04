@@ -39,6 +39,7 @@ add_library( # Sets the name of the library.
 #        src/main/cpp/DZAudio.cpp
 #        src/main/cpp/DZPacketQueue.cpp
 #        src/main/cpp/DZPlayerStatus.cpp
+        src/main/cpp/DZMedia.cpp
         ${SRC_LIST}
         )
 
@@ -61,6 +62,7 @@ find_library( # Sets the name of the path variable.
 
 target_link_libraries( # Specifies the target library.
         Hello
+        native-lib
         # 编解码(最重要的库)
         avcodec-57
         # 设备信息

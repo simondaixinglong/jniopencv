@@ -11,7 +11,6 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.simon.a.jni.JNICard;
-import com.simon.a.jni.listener.MediaErrorListener;
 
 import java.io.File;
 
@@ -43,14 +42,14 @@ public class MainActivity extends AppCompatActivity {
         JNICard mPlayer = new JNICard();
         mPlayer.setDataSource(mMusicFile.getAbsolutePath());
 
-        mPlayer.setOnErrorListener(new MediaErrorListener() {
-            @Override
-            public void onError(int code, String msg) {
-                Log.e("TAG", "error code: " + code);
-                Log.e("TAG", "error msg: " + msg);
-                // Java 的逻辑代码
-            }
-        });
+//        mPlayer.setOnErrorListener(new MediaErrorListener() {
+//            @Override
+//            public void onError(int code, String msg) {
+//                Log.e("TAG", "error code: " + code);
+//                Log.e("TAG", "error msg: " + msg);
+//                // Java 的逻辑代码
+//            }
+//        });
 
         mPlayer.prepare();
         mPlayer.play();

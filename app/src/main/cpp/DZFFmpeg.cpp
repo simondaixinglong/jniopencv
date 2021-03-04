@@ -3,22 +3,55 @@
 //
 
 #include "DZFFmpeg.h"
-#include "DZConstDefine.h"
 
 DZFFmpeg::DZFFmpeg(DZJNICall *pJniCall, const char *url) {
     this->pJniCall = pJniCall;
     // 赋值一份 url ，因为怕外面方法结束销毁了 url
     this->url = (char *) malloc(strlen(url) + 1);
     memcpy(this->url, url, strlen(url) + 1);
+
+    pPlayerStatus = new DZPlayerStatus();
 }
 
 DZFFmpeg::~DZFFmpeg() {
     release();
 }
 
+void *threadReadPacket(void *context) {
+    DZFFmpeg *pFFmpeg = (DZFFmpeg *) context;
+    while (pFFmpeg->pPlayerStatus != NULL && !pFFmpeg->pPlayerStatus->isExit) {
+        AVPacket *pPacket = av_packet_alloc();
+        if (av_read_frame(pFFmpeg->pFormatContext, pPacket) >= 0) {
+            if (pPacket->stream_index == pFFmpeg->pAudio->streamIndex) {
+                pFFmpeg->pAudio->pPacketQueue->push(pPacket);
+            } else if (pPacket->stream_index == pFFmpeg->pVideo->streamIndex) {
+                pFFmpeg->pVideo->pPacketQueue->push(pPacket);
+            } else {
+                // 1. 解引用数据 data ， 2. 销毁 pPacket 结构体内存  3. pPacket = NULL
+                av_packet_free(&pPacket);
+            }
+        } else {
+            // 1. 解引用数据 data ， 2. 销毁 pPacket 结构体内存  3. pPacket = NULL
+            av_packet_free(&pPacket);
+            // 睡眠一下，尽量不去消耗 cpu 的资源，也可以退出销毁这个线程
+            // break;
+        }
+    }
+    return 0;
+}
+
 void DZFFmpeg::play() {
+    // 一个线程去读取 Packet
+    pthread_t readPacketThreadT;
+    pthread_create(&readPacketThreadT, NULL, threadReadPacket, this);
+    pthread_detach(readPacketThreadT);
+
     if (pAudio != NULL) {
         pAudio->play();
+    }
+
+    if (pVideo != NULL) {
+        pVideo->play();
     }
 }
 
@@ -41,6 +74,21 @@ void DZFFmpeg::release() {
     if (url != NULL) {
         free(url);
         url = NULL;
+    }
+
+    if (pPlayerStatus != NULL) {
+        delete (pPlayerStatus);
+        pPlayerStatus = NULL;
+    }
+
+    if (pAudio != NULL) {
+        delete (pAudio);
+        pAudio = NULL;
+    }
+
+    if (pVideo != NULL) {
+        delete (pVideo);
+        pVideo = NULL;
     }
 }
 
@@ -87,21 +135,42 @@ void DZFFmpeg::prepare(ThreadMode threadMode) {
     }
 
     // 查找音频流的 index
-    int audioStramIndex = av_find_best_stream(pFormatContext, AVMediaType::AVMEDIA_TYPE_AUDIO, -1,
-            -1,
-            NULL, 0);
-    if (audioStramIndex < 0) {
+    int audioStreamIndex = av_find_best_stream(pFormatContext, AVMediaType::AVMEDIA_TYPE_AUDIO, -1,
+            -1, NULL, 0);
+    if (audioStreamIndex < 0) {
         LOGE("format audio stream error.");
         // 这种方式一般不推荐这么写，但是的确方便
-        callPlayerJniError(threadMode, FIND_STREAM_ERROR_CODE, "format audio stream error");
+        callPlayerJniError(threadMode, FIND_STREAM_ERROR_CODE, "find audio stream error");
         return;
     }
 
     // 不是我的事我不干，但是大家也不要想得过于复杂
-    pAudio = new DZAudio(audioStramIndex, pJniCall, pFormatContext);
-    pAudio->analysisStream(threadMode, pFormatContext->streams);
+    pAudio = new DZAudio(audioStreamIndex, pJniCall, pPlayerStatus);
+    pAudio->analysisStream(threadMode, pFormatContext);
 
-    // ---------- 重采样 end ----------
+    // 查找视频流的 index
+    int videoStreamIndex = av_find_best_stream(pFormatContext, AVMediaType::AVMEDIA_TYPE_VIDEO, -1,
+            -1, NULL, 0);
+    // 如果没有视频就直接播放音频
+    /* if (videoStreamIndex < 0) {
+        return;
+    }*/
+    if (videoStreamIndex < 0) {
+        LOGE("format video stream error.");
+        // 这种方式一般不推荐这么写，但是的确方便
+        callPlayerJniError(threadMode, FIND_STREAM_ERROR_CODE, "find video stream error");
+        return;
+    }
+    // 不是我的事我不干，但是大家也不要想得过于复杂
+    pVideo = new DZVideo(videoStreamIndex, pJniCall, pPlayerStatus, pAudio);
+    pVideo->analysisStream(threadMode, pFormatContext);
+
     // 回调到 Java 告诉他准备好了
     pJniCall->callPlayerPrepared(threadMode);
+}
+
+void DZFFmpeg::setSurface(jobject surface) {
+    if (pVideo != NULL) {
+        pVideo->setSurface(surface);
+    }
 }
