@@ -2,7 +2,7 @@ package com.shengsiyuan.kotlin6
 
 /*
     闭包
-
+    lambda表达式，匿名函数可以访问外层的变量
  */
 
 fun main(args: Array<String>) {

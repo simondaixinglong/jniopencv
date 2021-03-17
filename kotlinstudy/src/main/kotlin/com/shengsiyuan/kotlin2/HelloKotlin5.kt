@@ -46,8 +46,6 @@ open class Apple: Fruit()
 
 class ApplePear: Apple()
 
-
-
 class FruitProducer: Producer<Fruit> {
 
     override fun produce(): Fruit {

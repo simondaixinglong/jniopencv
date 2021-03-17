@@ -18,6 +18,7 @@ val add: (Int, Int) -> Int = { a, b -> a + b}
 val subtract = { a: Int, b: Int -> a - b }
 val myAction = { println("hello world") }
 
+//_ 表示不会使用到
 val mayReturnNull: (Int, Int) -> Int? = { _, _ -> null }
 val functionMaybeNull: ((Int, Int) -> Int)? = null
 
